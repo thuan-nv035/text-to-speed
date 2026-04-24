@@ -1,67 +1,118 @@
 <template>
-  <main class="app-shell">
-    <section class="card">
-      <div class="header">
-        <p class="eyebrow">VueJS App</p>
-        <h1>Text to Speech</h1>
-        <p class="subtitle">Nhập văn bản, chọn giọng đọc và điều chỉnh tốc độ đọc.</p>
+  <main class="min-h-screen bg-gradient-to-br from-blue-50 via-slate-50 to-cyan-50 px-4 py-8 text-slate-900 sm:px-8">
+    <section class="mx-auto w-full max-w-6xl rounded-[28px] border border-slate-200/80 bg-white/90 p-5 shadow-2xl shadow-slate-900/10 backdrop-blur sm:p-8">
+      <header class="mb-6">
+        <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.2em] text-blue-600">VueJS App</p>
+        <h1 class="text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">Text to Speech</h1>
+        <p class="mt-3 max-w-2xl text-base font-medium leading-7 text-slate-500 sm:text-lg">
+          Nhập văn bản, import file, chia đoạn cho CapCut, đọc trực tiếp và tải MP3 tiếng Việt.
+        </p>
+      </header>
+
+      <div class="space-y-3">
+        <label class="block text-sm font-extrabold text-slate-700" for="text">Nội dung cần đọc</label>
+        <textarea
+          id="text"
+          v-model="text"
+          class="min-h-56 w-full resize-y rounded-3xl border border-slate-300 bg-white p-5 text-base leading-8 text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+          placeholder="Nhập nội dung ở đây..."
+          rows="8"
+        ></textarea>
       </div>
 
-      <label class="label" for="text">Nội dung cần đọc</label>
-      <textarea
-        id="text"
-        v-model="text"
-        class="textarea"
-        placeholder="Nhập nội dung ở đây..."
-        rows="8"
-      ></textarea>
+      <div class="mt-4 flex flex-col gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+        <input
+          ref="fileInput"
+          class="hidden"
+          type="file"
+          accept=".txt,.md,.docx,.srt,.vtt,.json,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          @change="importFile"
+        />
+        <button
+          class="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          type="button"
+          @click="openFilePicker"
+        >
+          Import file
+        </button>
+        <button
+          class="rounded-2xl bg-white px-5 py-3 text-sm font-extrabold text-slate-800 ring-1 ring-slate-200 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          type="button"
+          :disabled="!text"
+          @click="clearText"
+        >
+          Xóa nội dung
+        </button>
+        <span class="text-sm font-bold text-slate-500">Hỗ trợ: TXT, MD, DOCX, SRT, VTT, JSON</span>
+      </div>
 
-      <section class="capcut-panel">
-        <div class="panel-header">
+      <section class="mt-5 rounded-[26px] border border-slate-200 bg-slate-50 p-5">
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
-            <p class="eyebrow small">CapCut Helper</p>
-            <h2>Chia văn bản cho CapCut</h2>
-            <p>Mỗi đoạn được chia nhỏ để không vượt quá giới hạn ký tự của ô Text to Speech trong CapCut.</p>
+            <p class="mb-1 text-xs font-extrabold uppercase tracking-[0.18em] text-blue-600">CapCut Helper</p>
+            <h2 class="text-2xl font-black text-slate-950">Chia văn bản cho CapCut</h2>
+            <p class="mt-2 max-w-2xl text-sm font-medium leading-6 text-slate-500">
+              Mỗi đoạn được chia nhỏ để không vượt quá giới hạn ký tự của ô Text to Speech trong CapCut.
+            </p>
           </div>
-          <div class="counter">
+          <div class="w-fit rounded-full bg-blue-100 px-4 py-2 text-sm font-black text-blue-700">
             {{ text.length }} ký tự
           </div>
         </div>
 
-        <div class="chunk-control">
-          <label class="label" for="chunkLimit">Giới hạn mỗi đoạn</label>
-          <input
-            id="chunkLimit"
-            v-model.number="chunkLimit"
-            class="input small-input"
-            type="number"
-            min="100"
-            max="500"
-            step="10"
-          />
-          <button class="btn" type="button" @click="copyAllChunks">
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+          <div class="w-full sm:w-40">
+            <label class="mb-2 block text-sm font-extrabold text-slate-700" for="chunkLimit">Giới hạn mỗi đoạn</label>
+            <input
+              id="chunkLimit"
+              v-model.number="chunkLimit"
+              class="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 font-bold outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+              type="number"
+              min="100"
+              max="500"
+              step="10"
+            />
+          </div>
+          <button
+            class="rounded-2xl bg-white px-5 py-3 text-sm font-extrabold text-slate-800 ring-1 ring-slate-200 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            type="button"
+            :disabled="!capCutChunks.length"
+            @click="copyAllChunks"
+          >
             Copy tất cả đoạn
           </button>
         </div>
 
-        <div class="chunk-list">
-          <article v-for="(chunk, index) in capCutChunks" :key="index" class="chunk-card">
-            <div class="chunk-head">
-              <strong>Đoạn {{ index + 1 }}</strong>
-              <span>{{ chunk.length }} ký tự</span>
+        <div class="mt-4 grid max-h-96 gap-3 overflow-auto pr-1">
+          <article
+            v-for="(chunk, index) in capCutChunks"
+            :key="index"
+            class="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
+          >
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <strong class="text-slate-950">Đoạn {{ index + 1 }}</strong>
+              <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">{{ chunk.length }} ký tự</span>
             </div>
-            <p>{{ chunk }}</p>
-            <button class="btn mini" type="button" @click="copyChunk(chunk, index)">
+            <p class="mb-4 whitespace-pre-line text-sm font-medium leading-7 text-slate-600">{{ chunk }}</p>
+            <button
+              class="rounded-xl bg-slate-100 px-4 py-2 text-xs font-extrabold text-slate-800 transition hover:bg-slate-200"
+              type="button"
+              @click="copyChunk(chunk, index)"
+            >
               Copy đoạn {{ index + 1 }}
             </button>
           </article>
         </div>
       </section>
 
-      <div class="grid two">
-        <div class="field">
-          <label class="label" for="voice">Giọng đọc</label>
-          <select id="voice" v-model="selectedVoiceName" class="input">
+      <div class="mt-5 grid gap-4 lg:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-extrabold text-slate-700" for="voice">Giọng đọc</label>
+          <select
+            id="voice"
+            v-model="selectedVoiceName"
+            class="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 font-bold outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+          >
             <option value="">Giọng mặc định</option>
             <option v-for="voice in filteredVoices" :key="voice.name" :value="voice.name">
               {{ voice.name }} - {{ voice.lang }}
@@ -69,9 +120,13 @@
           </select>
         </div>
 
-        <div class="field">
-          <label class="label" for="language">Lọc ngôn ngữ</label>
-          <select id="language" v-model="languageFilter" class="input">
+        <div>
+          <label class="mb-2 block text-sm font-extrabold text-slate-700" for="language">Lọc ngôn ngữ</label>
+          <select
+            id="language"
+            v-model="languageFilter"
+            class="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 font-bold outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+          >
             <option value="">Tất cả</option>
             <option v-for="lang in languages" :key="lang" :value="lang">
               {{ lang }}
@@ -80,79 +135,104 @@
         </div>
       </div>
 
-      <div class="grid three">
-        <div class="range-box">
-          <div class="range-title">
+      <div class="mt-5 grid gap-4 lg:grid-cols-3">
+        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <div class="mb-3 flex items-center justify-between font-extrabold">
             <label for="rate">Tốc độ</label>
-            <span>{{ rate.toFixed(1) }}</span>
+            <span class="text-blue-700">{{ rate.toFixed(1) }}</span>
           </div>
-          <input id="rate" v-model.number="rate" type="range" min="0.5" max="2" step="0.1" />
+          <input id="rate" v-model.number="rate" class="w-full accent-blue-600" type="range" min="0.5" max="2" step="0.1" />
         </div>
 
-        <div class="range-box">
-          <div class="range-title">
+        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <div class="mb-3 flex items-center justify-between font-extrabold">
             <label for="pitch">Cao độ</label>
-            <span>{{ pitch.toFixed(1) }}</span>
+            <span class="text-blue-700">{{ pitch.toFixed(1) }}</span>
           </div>
-          <input id="pitch" v-model.number="pitch" type="range" min="0" max="2" step="0.1" />
+          <input id="pitch" v-model.number="pitch" class="w-full accent-blue-600" type="range" min="0" max="2" step="0.1" />
         </div>
 
-        <div class="range-box">
-          <div class="range-title">
+        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <div class="mb-3 flex items-center justify-between font-extrabold">
             <label for="volume">Âm lượng</label>
-            <span>{{ Math.round(volume * 100) }}%</span>
+            <span class="text-blue-700">{{ Math.round(volume * 100) }}%</span>
           </div>
-          <input id="volume" v-model.number="volume" type="range" min="0" max="1" step="0.1" />
+          <input id="volume" v-model.number="volume" class="w-full accent-blue-600" type="range" min="0" max="1" step="0.1" />
         </div>
       </div>
 
-      <div class="actions">
-        <button class="btn primary" :disabled="!canSpeak" @click="speak">
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <button
+          class="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-extrabold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="!canSpeak"
+          @click="speak"
+        >
           Đọc văn bản
         </button>
-        <button class="btn" :disabled="!isSpeaking" @click="pause">
+        <button
+          class="rounded-2xl bg-slate-200 px-5 py-3 text-sm font-extrabold text-slate-900 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="!isSpeaking"
+          @click="pause"
+        >
           Tạm dừng
         </button>
-        <button class="btn" :disabled="!isPaused" @click="resume">
+        <button
+          class="rounded-2xl bg-slate-200 px-5 py-3 text-sm font-extrabold text-slate-900 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="!isPaused"
+          @click="resume"
+        >
           Tiếp tục
         </button>
-        <button class="btn danger" :disabled="!isSpeaking && !isPaused" @click="stop">
+        <button
+          class="rounded-2xl bg-red-100 px-5 py-3 text-sm font-extrabold text-red-700 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="!isSpeaking && !isPaused"
+          @click="stop"
+        >
           Dừng
         </button>
-        <button class="btn success" :disabled="!canSpeak || isDownloading" @click="downloadMp3">
+        <button
+          class="rounded-2xl bg-green-100 px-5 py-3 text-sm font-extrabold text-green-700 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="!canSpeak || isDownloading"
+          @click="downloadMp3"
+        >
           {{ isDownloading ? 'Đang tạo MP3...' : 'Tải MP3' }}
         </button>
       </div>
 
-      <p v-if="status" class="status">{{ status }}</p>
-      <p v-if="downloadStatus" class="status">{{ downloadStatus }}</p>
-      <p v-if="!isSupported" class="warning">
-        Trình duyệt này chưa hỗ trợ Web Speech API. Hãy thử Chrome, Edge hoặc Safari bản mới.
-      </p>
+      <div class="mt-5 space-y-3">
+        <p v-if="status" class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-extrabold text-blue-700">{{ status }}</p>
+        <p v-if="downloadStatus" class="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-extrabold text-blue-700">{{ downloadStatus }}</p>
+        <p v-if="!isSupported" class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-extrabold text-red-700">
+          Trình duyệt này chưa hỗ trợ Web Speech API. Hãy thử Chrome, Edge hoặc Safari bản mới.
+        </p>
+      </div>
     </section>
   </main>
 </template>
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import mammoth from 'mammoth/mammoth.browser'
 
 const STORAGE_KEY = 'vue-text-to-speech-content'
+const SUPPORTED_TEXT_EXTENSIONS = ['txt', 'md', 'srt', 'vtt', 'json']
+const TTS_API_URL = '/api/tts'
 
 const text = ref(localStorage.getItem(STORAGE_KEY) || 'Xin chào! Đây là ứng dụng chuyển văn bản thành giọng nói bằng VueJS.')
+const fileInput = ref(null)
 const voices = ref([])
 const selectedVoiceName = ref('')
 const languageFilter = ref('vi-VN')
-const chunkLimit = ref(480)
+const chunkLimit = ref(500)
 const rate = ref(1)
 const pitch = ref(1)
 const volume = ref(1)
 const status = ref('')
 const downloadStatus = ref('')
 const isDownloading = ref(false)
+const importedFileName = ref('')
 const isSpeaking = ref(false)
 const isPaused = ref(false)
-
-const TTS_API_URL = '/api/tts'
 
 const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
 const isSupported = computed(() => Boolean(synth && window.SpeechSynthesisUtterance))
@@ -177,6 +257,75 @@ const canSpeak = computed(() => {
 const capCutChunks = computed(() => {
   return splitTextForCapCut(text.value, chunkLimit.value)
 })
+
+function openFilePicker() {
+  fileInput.value?.click()
+}
+
+function clearText() {
+  stop()
+  text.value = ''
+  importedFileName.value = ''
+  status.value = 'Đã xóa nội dung.'
+}
+
+async function importFile(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+
+  if (!file) return
+
+  const extension = file.name.split('.').pop()?.toLowerCase() || ''
+
+  try {
+    status.value = `Đang import file ${file.name}...`
+
+    let content = ''
+
+    if (extension === 'docx') {
+      content = await readDocxFile(file)
+    } else if (SUPPORTED_TEXT_EXTENSIONS.includes(extension) || file.type.startsWith('text/')) {
+      content = await readTextFile(file)
+    } else {
+      throw new Error('Định dạng file chưa được hỗ trợ. Hãy dùng TXT, MD, DOCX, SRT, VTT hoặc JSON.')
+    }
+
+    text.value = cleanImportedText(content)
+    importedFileName.value = file.name
+    status.value = `Đã import ${file.name} (${text.value.length} ký tự).`
+  } catch (error) {
+    status.value = error.message || 'Không thể import file.'
+  }
+}
+
+function readTextFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Không đọc được file văn bản.'))
+    reader.readAsText(file, 'utf-8')
+  })
+}
+
+async function readDocxFile(file) {
+  const arrayBuffer = await file.arrayBuffer()
+  const result = await mammoth.extractRawText({ arrayBuffer })
+  return result.value || ''
+}
+
+function cleanImportedText(content) {
+  const lineBreak = String.fromCharCode(10)
+
+  return String(content)
+    .replaceAll(String.fromCharCode(13) + lineBreak, lineBreak)
+    .replaceAll(String.fromCharCode(13), lineBreak)
+    .split(lineBreak)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(lineBreak + lineBreak)
+    .trim()
+}
 
 function splitTextForCapCut(input, limit = 480) {
   const cleanText = input
@@ -286,7 +435,7 @@ function speak() {
   utterance.rate = rate.value
   utterance.pitch = pitch.value
   utterance.volume = volume.value
-  utterance.lang = selectedVoice.value?.lang || 'vi-VN'
+  utterance.lang = selectedVoice.value?.lang || languageFilter.value || 'vi-VN'
 
   utterance.onstart = () => {
     isSpeaking.value = true
@@ -412,315 +561,3 @@ onBeforeUnmount(() => {
   }
 })
 </script>
-
-<style scoped>
-* {
-  box-sizing: border-box;
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 32px;
-  background: linear-gradient(135deg, #edf2ff, #f8fafc 45%, #ecfeff);
-  color: #0f172a;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.card {
-  width: min(980px, 100%);
-  padding: 32px;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.88);
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.14);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  backdrop-filter: blur(18px);
-}
-
-.header {
-  margin-bottom: 24px;
-}
-
-.eyebrow {
-  margin: 0 0 8px;
-  color: #2563eb;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 13px;
-}
-
-h1 {
-  margin: 0;
-  font-size: clamp(32px, 6vw, 56px);
-  line-height: 1;
-}
-
-.subtitle {
-  margin: 14px 0 0;
-  color: #64748b;
-  font-size: 17px;
-}
-
-.label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 700;
-  color: #334155;
-}
-
-.textarea,
-.input {
-  width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 18px;
-  background: #ffffff;
-  color: #0f172a;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.textarea {
-  resize: vertical;
-  min-height: 190px;
-  padding: 18px;
-  font-size: 17px;
-  line-height: 1.6;
-}
-
-.input {
-  height: 48px;
-  padding: 0 14px;
-}
-
-.textarea:focus,
-.input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
-}
-
-.grid {
-  display: grid;
-  gap: 16px;
-  margin-top: 18px;
-}
-
-.two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.three {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.capcut-panel {
-  margin-top: 20px;
-  padding: 20px;
-  border-radius: 22px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 16px;
-}
-
-.panel-header h2 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.panel-header p {
-  margin: 8px 0 0;
-  color: #64748b;
-}
-
-.small {
-  margin-bottom: 6px;
-  font-size: 12px;
-}
-
-.counter {
-  flex: 0 0 auto;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-weight: 800;
-}
-
-.chunk-control {
-  display: flex;
-  gap: 12px;
-  align-items: end;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-
-.small-input {
-  width: 140px;
-}
-
-.chunk-list {
-  display: grid;
-  gap: 12px;
-  max-height: 360px;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-.chunk-card {
-  padding: 14px;
-  border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-}
-
-.chunk-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.chunk-head span {
-  color: #2563eb;
-  font-weight: 700;
-}
-
-.chunk-card p {
-  margin: 0 0 12px;
-  color: #334155;
-  line-height: 1.55;
-}
-
-.mini {
-  padding: 9px 12px;
-  border-radius: 12px;
-  font-size: 13px;
-}
-
-.range-box {
-  padding: 18px;
-  border-radius: 20px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.range-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  font-weight: 700;
-}
-
-.range-title span {
-  color: #2563eb;
-}
-
-input[type='range'] {
-  width: 100%;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.btn {
-  border: 0;
-  border-radius: 16px;
-  padding: 13px 18px;
-  background: #e2e8f0;
-  color: #0f172a;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
-}
-
-.btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-}
-
-.btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.primary {
-  background: #2563eb;
-  color: white;
-}
-
-.danger {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.success {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status,
-.warning {
-  margin: 18px 0 0;
-  padding: 14px 16px;
-  border-radius: 16px;
-  font-weight: 700;
-}
-
-.status {
-  background: #eff6ff;
-  color: #1d4ed8;
-}
-
-.warning {
-  background: #fef2f2;
-  color: #b91c1c;
-}
-
-@media (max-width: 760px) {
-  .app-shell {
-    padding: 18px;
-  }
-
-  .card {
-    padding: 22px;
-  }
-
-  .panel-header {
-    flex-direction: column;
-  }
-
-  .chunk-control {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .small-input {
-    width: 100%;
-  }
-
-  .two,
-  .three {
-    grid-template-columns: 1fr;
-  }
-
-  .actions {
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
-  }
-}
-</style>
