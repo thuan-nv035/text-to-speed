@@ -152,7 +152,7 @@ const isDownloading = ref(false)
 const isSpeaking = ref(false)
 const isPaused = ref(false)
 
-const TTS_API_URL = 'http://localhost:3000/api/tts'
+const TTS_API_URL = '/api/tts'
 
 const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
 const isSupported = computed(() => Boolean(synth && window.SpeechSynthesisUtterance))
